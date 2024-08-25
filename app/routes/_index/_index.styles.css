@@ -1,0 +1,28 @@
+
+.body {
+    min-height: 100vh;
+    display: grid;
+    place-content: center;
+
+    text-align: center;
+}
+
+.heading {
+    font-size: 4rem;
+    font-weight: 600;
+}
+
+.subheading {
+    font-size: 1.2rem;
+}
+
+.cta-btn {
+    background-color: coral;
+    color: hsl(0, 0%, 100%);
+    font-size: 1.5rem;
+    padding: 0.4em 0.8em;
+    border-radius: 0.5em;
+    width: fit-content;
+    margin-inline: auto;
+    margin-block: 1.5em;
+}
