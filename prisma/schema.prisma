@@ -13,9 +13,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model ThreadSummaries {
-  threadId      String @id
-  threadSummary String
+model VectorizedThreads {
+  threadId  String @id
+  userEmail String
 }
 
 model Users {
