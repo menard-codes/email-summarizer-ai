@@ -1,7 +1,7 @@
 import "dotenv/config";
 import Nylas from "nylas";
 
-const config = {
+export const config = {
     clientId: process.env.NYLAS_CLIENT_ID as string,
     callbackUri: "http://localhost:5173/oauth/exchange",
     apiKey: process.env.NYLAS_API_KEY as string,
