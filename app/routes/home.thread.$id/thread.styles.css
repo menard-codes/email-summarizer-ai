@@ -1,0 +1,90 @@
+
+.threads-body h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.threads-body hr {
+    margin-block: 1.5rem;
+}
+
+.threads-body {
+    position: relative;
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    height: 100%;
+}
+
+.threads-section,
+.chat-section {
+    padding: 1rem;
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    overflow: hidden auto;
+}
+
+.threads-section {
+    left: 0;
+    border-right: 2px solid hsl(0, 0%, 40%);
+}
+
+.threads {
+    margin-top: 1rem;
+}
+
+.email-thread-item {
+    background-color: hsl(0, 0%, 90%);
+    margin-bottom: 1em;
+    padding: 1em;
+    border-radius: 1em;
+}
+
+.chat-section {
+    right: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+}
+
+.conversation {
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.chat-bubble {
+    width: fit-content;
+    max-width: 70%;
+    margin-block: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.u-chat-bubble {
+    background-color: hsl(0, 0%, 20%);
+    color: hsl(0, 0%, 100%);
+    margin-left: auto;
+}
+
+.s-chat-bubble {
+    background-color: hsl(0, 0%, 90%);
+    margin-right: auto;
+}
+
+.chat-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1em;
+}
+
+.chat-input {
+    display: block;
+    padding: 0.2em 0.5em;
+}
+
+.chat-form button {
+    border: 1px solid hsl(0, 0%, 80%);
+    border-radius: 1em;
+    padding: 0.5em 1em;
+}

@@ -3,7 +3,7 @@ import { config, nylas } from "~/nylas.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
-    const searchParams = new URLSearchParams(url.href);
+    const searchParams = new URLSearchParams(url.search);
     const code = searchParams.get('code');
 
     if (!code) {
@@ -21,7 +21,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         const response = await nylas.auth.exchangeCodeForToken(codeExhangePayload);
         const { grantId } = response;
         // TODO: Save grantId to DB
-        console.log(grantId)
+        console.log('Grant ID:', grantId)
         // TODO: Setup Authentication
 
         return redirect("/home");
