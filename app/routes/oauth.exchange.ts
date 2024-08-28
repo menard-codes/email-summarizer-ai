@@ -1,5 +1,8 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { config, nylas } from "~/nylas.server";
+import { config, nylas } from "~/services/nylas.server";
+import db from "~/services/db.server";
+import jwt from "jsonwebtoken";
+import { storage } from "~/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
@@ -19,12 +22,35 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     try {
         const response = await nylas.auth.exchangeCodeForToken(codeExhangePayload);
-        const { grantId } = response;
-        // TODO: Save grantId to DB
-        console.log('Grant ID:', grantId)
-        // TODO: Setup Authentication
+        const { grantId, email } = response;
+        const user = await db.users.findUnique({ where: { email } });
+        if (!user) {
+            await db.users.create({
+                data: {
+                    email,
+                    grantId
+                }
+            });
+        }
 
-        return redirect("/home");
+
+        // TODO: Setup Authentication
+        const sessionSecret = process.env.JWT_SECRET;
+
+        if (!sessionSecret) {
+            console.error('sessionSecret env not defined');
+            throw new Response('Internal server error', { status: 500 });
+        }
+
+        const token = jwt.sign({ email }, sessionSecret, { expiresIn: "7d" });
+        const session = await storage.getSession();
+        session.set("auth_session", token);
+
+        return redirect("/home", {
+            headers: {
+                "Set-Cookie": await storage.commitSession(session)
+            }
+        });
     } catch (error) {
         console.error(error);
         throw new Response("Failed to exchange authorization code for token", { status: 500 })

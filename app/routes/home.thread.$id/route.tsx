@@ -1,11 +1,14 @@
 import { LinksFunction } from "@remix-run/node";
 import styles from "./thread.styles.css?url";
+import { useOutletContext } from "@remix-run/react";
 
 export const links: LinksFunction = () => [
     { rel: 'stylesheet', href: styles }
 ]
 
 export default function Thread() {
+    const context = useOutletContext();
+
     const emailThreadSummary = `
         Culpa dolor sunt consectetur ut. Adipisicing proident commodo Lorem reprehenderit sint. Ea aliqua qui cupidatat enim sint officia velit adipisicing tempor elit labore do sunt. Quis excepteur laborum velit quis aliquip in ex mollit amet esse quis deserunt. Anim non pariatur voluptate aliquip ad culpa.
     `;
