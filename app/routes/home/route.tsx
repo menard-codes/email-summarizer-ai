@@ -1,5 +1,5 @@
 import { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, Outlet, useLoaderData, useLocation } from "@remix-run/react";
+import { Form, Link, Outlet, useLoaderData, useLocation, useNavigation } from "@remix-run/react";
 import { requireAuth } from "~/services/auth.server";
 import { nylas } from "~/services/nylas.server";
 
@@ -11,10 +11,14 @@ export const meta: MetaFunction = () => [
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const { email, grantId } = await requireAuth(request) as { grantId: string; email: string; };
 
+    const url = new URL(request.url);
+    const searchParams = new URLSearchParams(url.search);
+
     const threads = await nylas.threads.list({
         identifier: grantId,
         queryParams: {
-            limit: 10
+            limit: 10,
+            searchQueryNative: searchParams.get('q') || ''
         }
     });
 
@@ -24,6 +28,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Home() {
     const { email, threads } = useLoaderData<typeof loader>();
     const { pathname } = useLocation();
+    const navigation = useNavigation();
 
     return (
         <main className="h-full grid grid-rows-[auto_1fr]">
@@ -44,14 +49,15 @@ export default function Home() {
             {
                 pathname === "/home"
                     ? (
-                        <div className="p-4 max-w-6xl mx-auto">
+                        <div className="p-4 w-full max-w-6xl mx-auto">
                             <div>
                                 <div>
                                     <h2 className="font-semibold text-4xl mb-2">Inbox</h2>
                                     <div className="grid grid-cols-[1fr_auto] gap-4">
-                                        <Form>
+                                        <Form action="/home">
                                             <input
                                                 type="search"
+                                                name="q"
                                                 placeholder="Search Inbox..."
                                                 className="block w-full border rounded-lg p-2 outline-none"
                                             />
@@ -64,16 +70,20 @@ export default function Home() {
                                     </div>
                                 </div>
                                 {
-                                    threads.map(({ id, unread, subject, snippet }) => (
-                                        <Link to={`/home/thread/${id}`} key={id}>
-                                            <div className={`${unread ? 'bg-gray-400' : 'bg-gray-200'} relative flex gap-3 items-center p-4 my-4 text-nowrap overflow-hidden rounded-lg`}>
-                                                <p className={`${unread ? 'font-semibold' : ''}`}>{subject}</p>
-                                                <p className="text-sm italic text-gray-600">{snippet}</p>
-
-                                                <div className={`absolute top-0 right-0 h-full w-48 bg-gradient-to-l ${unread ? 'from-gray-400' : 'from-gray-200'}`}></div>
-                                            </div>
-                                        </Link>
-                                    ))
+                                    navigation.state === "loading"
+                                        ? <h1>Loading...</h1>
+                                        : (
+                                            threads.map(({ id, unread, subject, snippet }) => (
+                                                <Link to={`/home/thread/${id}`} key={id}>
+                                                    <div className={`${unread ? 'bg-gray-400' : 'bg-gray-200'} relative flex gap-3 items-center p-4 my-4 text-nowrap overflow-hidden rounded-lg`}>
+                                                        <p className={`${unread ? 'font-semibold' : ''}`}>{subject}</p>
+                                                        <p className="text-sm italic text-gray-600">{snippet}</p>
+        
+                                                        <div className={`absolute top-0 right-0 h-full w-48 bg-gradient-to-l ${unread ? 'from-gray-400' : 'from-gray-200'}`}></div>
+                                                    </div>
+                                                </Link>
+                                            ))
+                                        )
                                 }
                             </div>
                         </div>
