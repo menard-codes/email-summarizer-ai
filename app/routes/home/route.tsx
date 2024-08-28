@@ -46,7 +46,7 @@ export default function Home() {
                 <div className="flex items-center gap-x-4">
                     <p>{email}</p>
                     <Form action="/logout" method="post">
-                        <button type="submit" className="bg-red-600 text-white px-3 py-1 rounded-lg">Log Out</button>
+                        <button type="submit" className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg">Log Out</button>
                     </Form>
                 </div>
             </nav>
