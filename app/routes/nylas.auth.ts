@@ -1,5 +1,5 @@
 import { redirect } from "@remix-run/node";
-import { config, nylas } from "~/nylas.server";
+import { config, nylas } from "~/services/nylas.server";
 
 export const loader = () => {
     const authUrl = nylas.auth.urlForOAuth2({

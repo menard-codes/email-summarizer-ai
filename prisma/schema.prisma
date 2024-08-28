@@ -20,5 +20,5 @@ model VectorizedThreads {
 
 model Users {
   grantId String @id
-  email   String
+  email   String @unique
 }
