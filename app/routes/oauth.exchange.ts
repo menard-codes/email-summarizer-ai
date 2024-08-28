@@ -34,7 +34,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         }
 
 
-        // TODO: Setup Authentication
         const sessionSecret = process.env.JWT_SECRET;
 
         if (!sessionSecret) {
