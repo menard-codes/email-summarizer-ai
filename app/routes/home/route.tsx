@@ -1,6 +1,6 @@
 import { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, Outlet, useLoaderData, useLocation, useNavigation, useSubmit } from "@remix-run/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { requireAuth } from "~/services/auth.server";
 import { nylas } from "~/services/nylas.server";
 import { decodeString, encodeString, uint8ArrayToUrlSafeBase64, urlSafeBase64ToUint8Array } from "~/utils/encryption-helpers";
@@ -45,7 +45,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Home() {
     const { email, threads, prev, current, nextPage, pageNum, paginationStack } = useLoaderData<typeof loader>();
-    const { pathname } = useLocation();
+    const { pathname, search } = useLocation();
     const navigation = useNavigation();
     const submit = useSubmit();
 
@@ -53,6 +53,15 @@ export default function Home() {
     const [pageNumber, setPageNumber] = useState(pageNum);
     const [currentPage, setCurrentPage] = useState<string>(current);
     const [prevPage, setPrevPage] = useState<string | undefined>(prev);
+    
+    useEffect(() => {
+        if (!search) {
+            setPaginationCursors([]);
+            setPageNumber(1);
+            setCurrentPage('');
+            setPrevPage(undefined);
+        }
+    }, [search]);
 
     const handlePrevPagination = async () => {
         if (prevPage !== undefined) {
