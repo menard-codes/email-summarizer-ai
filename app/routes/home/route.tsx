@@ -1,7 +1,9 @@
 import { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, Outlet, useLoaderData, useLocation, useNavigation } from "@remix-run/react";
+import { Form, Link, Outlet, useLoaderData, useLocation, useNavigation, useSubmit } from "@remix-run/react";
+import { useState } from "react";
 import { requireAuth } from "~/services/auth.server";
 import { nylas } from "~/services/nylas.server";
+import { decodeString, encodeString, uint8ArrayToUrlSafeBase64, urlSafeBase64ToUint8Array } from "~/utils/encryption-helpers";
 
 export const meta: MetaFunction = () => [
     { title: 'Email Summarizer AI' },
@@ -18,17 +20,84 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         identifier: grantId,
         queryParams: {
             limit: 10,
+            pageToken: searchParams.get('pageToken') || '',
             searchQueryNative: searchParams.get('q') || ''
         }
     });
+    const cursorsStackEnc = searchParams.get('paginationCursors');
+    let cursorStack: (string | undefined)[] = [];
+    if (cursorsStackEnc !== null) {
+        const recoveredArray = urlSafeBase64ToUint8Array(cursorsStackEnc);
+        const decodedString = decodeString(recoveredArray);
+        cursorStack = JSON.parse(decodedString);
+    }
 
-    return { email, threads: threads.data.map(({ id, unread, subject, snippet }) => ({ id, unread, subject, snippet })) };
+    return {
+        email,
+        threads: threads.data.map(({ id, unread, subject, snippet }) => ({ id, unread, subject, snippet })),
+        prev: searchParams.get('prevPage') || undefined,
+        current: searchParams.get('pageToken') || '',
+        nextPage: threads.nextCursor,
+        pageNum: Number(searchParams.get('pageNumber')) || 1,
+        paginationStack: cursorStack
+    };
 }
 
 export default function Home() {
-    const { email, threads } = useLoaderData<typeof loader>();
+    const { email, threads, prev, current, nextPage, pageNum, paginationStack } = useLoaderData<typeof loader>();
     const { pathname } = useLocation();
     const navigation = useNavigation();
+    const submit = useSubmit();
+
+    const [paginationCursors, setPaginationCursors] = useState<(string | undefined)[]>(paginationStack);
+    const [pageNumber, setPageNumber] = useState(pageNum);
+    const [currentPage, setCurrentPage] = useState<string>(current);
+    const [prevPage, setPrevPage] = useState<string | undefined>(prev);
+
+    const handlePrevPagination = async () => {
+        if (prevPage !== undefined) {
+            const newCurrent = prevPage;
+            const newPrev = paginationCursors[paginationCursors.length - 1];
+            const newPaginationCursors = paginationCursors.slice(0, paginationCursors.length - 1)
+            const newPageNumber = pageNumber - 1;
+
+            await fetchData(newCurrent, newPrev, newPaginationCursors, newPageNumber);
+
+            setPaginationCursors(newPaginationCursors);
+            setPrevPage(newPrev)
+            setCurrentPage(newCurrent);
+            setPageNumber(newPageNumber)
+        }
+    }
+
+    const handleNextPagination = async () => {
+        if (nextPage) {
+            const newCurrent = nextPage;
+            const newPrev = currentPage;
+            const newPaginationCursors = [...paginationCursors, prevPage];
+            const newPageNumber = pageNumber + 1;
+
+            await fetchData(newCurrent, newPrev, newPaginationCursors, newPageNumber);
+
+            setPaginationCursors(newPaginationCursors);
+            setPrevPage(newPrev);
+            setCurrentPage(newCurrent);
+            setPageNumber(newPageNumber);
+        }
+    }
+
+    const fetchData = async (newCurrent: string, newPrev: string | undefined, newPaginationCursors: (string | undefined)[], newPageNumber: number) => {
+        const searchParams = new URLSearchParams();
+        searchParams.set('pageToken', newCurrent);
+        if (newPrev !== undefined) {
+            searchParams.set('prevPage', newPrev);
+        }
+        const encodedArray = encodeString(JSON.stringify(newPaginationCursors));
+        const urlSafeString = uint8ArrayToUrlSafeBase64(encodedArray);
+        searchParams.set('paginationCursors', urlSafeString);
+        searchParams.set('pageNumber', String(newPageNumber));
+        submit(`?${searchParams.toString()}`);
+    }
 
     return (
         <main className="h-full grid grid-rows-[auto_1fr]">
@@ -63,9 +132,9 @@ export default function Home() {
                                             />
                                         </Form>
                                         <div>
-                                            <button className="py-2 px-4 bg-amber-500 text-gray-50 rounded-lg">&lt;</button>
-                                            <button className="mx-4 text-xl font-semibold">10</button>
-                                            <button className="py-2 px-4 bg-amber-500 text-gray-50 rounded-lg">&gt;</button>
+                                            <button disabled={prevPage === undefined} onClick={handlePrevPagination} className="py-2 px-4 bg-amber-500 text-gray-50 rounded-lg">&lt;</button>
+                                            <span className="mx-4 text-xl font-semibold">{pageNumber}</span>
+                                            <button disabled={nextPage === undefined} onClick={handleNextPagination} className="py-2 px-4 bg-amber-500 text-gray-50 rounded-lg">&gt;</button>
                                         </div>
                                     </div>
                                 </div>
