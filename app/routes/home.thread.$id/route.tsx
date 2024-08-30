@@ -1,13 +1,8 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import styles from "./thread.styles.css?url";
 import { requireAuth } from "~/services/auth.server";
 import { nylas } from "~/services/nylas.server";
 import { Form, useLoaderData, useNavigate, } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
-
-// export const links: LinksFunction = () => [
-//     { rel: 'stylesheet', href: styles }
-// ]
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const { id } = params;
@@ -21,8 +16,16 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const messages = await nylas.messages.list({
         identifier: grantId,
         queryParams: {
-            limit: 10,
             threadId: id,
+        }
+    });
+
+    // set message as read
+    await nylas.threads.update({
+        identifier: grantId,
+        threadId: id,
+        requestBody: {
+            unread: false
         }
     });
     
@@ -34,7 +37,6 @@ export default function Thread() {
     const navigate = useNavigate();
 
     const [emailsViewed, setEmailsViewed] = useState<string[]>([]);
-
     const emailThreadSummary = `
         Culpa dolor sunt consectetur ut. Adipisicing proident commodo Lorem reprehenderit sint. Ea aliqua qui cupidatat enim sint officia velit adipisicing tempor elit labore do sunt. Quis excepteur laborum velit quis aliquip in ex mollit amet esse quis deserunt. Anim non pariatur voluptate aliquip ad culpa.
     `;
@@ -143,9 +145,35 @@ function HTMLIframe({ htmlContent }: { htmlContent: string }) {
         if (iframeRef.current) {
             const iframe = iframeRef.current;
             const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-            iframeDoc?.open();
-            iframeDoc?.write(htmlContent);
-            iframeDoc?.close();
+
+            if (iframeDoc) {
+                iframeDoc.open();
+                iframeDoc.write(htmlContent);
+                iframeDoc.close();
+
+                // Remove unwanted elements after the content is loaded
+                const removeUnwantedElements = () => {
+                    // Remove .gmail_quote elements
+                    const gmailQuotes = iframeDoc.querySelectorAll('.gmail_quote');
+                    const xGmailQuotes = iframeDoc.querySelectorAll('.x_gmail_quote');
+                    gmailQuotes.forEach(element => element.remove());
+                    xGmailQuotes.forEach(element => element.remove());
+
+                    // Remove #appendonsend and its succeeding siblings
+                    const appendonsend = iframeDoc.querySelector('#appendonsend');
+                    if (appendonsend) {
+                        let currentElement: Element | null = appendonsend;
+                        while (currentElement) {
+                            const nextElement: Element | null = currentElement.nextElementSibling;
+                            currentElement.remove();
+                            currentElement = nextElement;
+                        }
+                    }
+                };
+
+                // Use setTimeout to ensure the content is fully loaded
+                setTimeout(removeUnwantedElements, 0);
+            }
         }
     }, [htmlContent]);
 
@@ -153,7 +181,7 @@ function HTMLIframe({ htmlContent }: { htmlContent: string }) {
         <iframe
             ref={iframeRef}
             title="Email Content"
-            className="w-full h-96 border-2"
+            className="block w-full h-64 border-2"
         />
-    )
+    );
 }
