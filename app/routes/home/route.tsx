@@ -5,6 +5,7 @@ import { requireAuth } from "~/services/auth.server";
 import { nylas } from "~/services/nylas.server";
 import { decodeString, encodeString, uint8ArrayToUrlSafeBase64, urlSafeBase64ToUint8Array } from "~/utils/encryption-helpers";
 
+
 export const meta: MetaFunction = () => [
     { title: 'Email Summarizer AI' },
     { name: 'description', content: 'Email Summarizer AI' }

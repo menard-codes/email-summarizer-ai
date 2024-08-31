@@ -88,3 +88,28 @@
     border-radius: 1em;
     padding: 0.5em 1em;
 }
+
+/* ---------- */
+
+#summary-container h2 {
+    font-size: 1.3rem;
+}
+
+#summary-container h3 {
+    font-size: 1.2rem;
+}
+
+#summary-container h2, 
+#summary-container h3,
+#summary-container h4 {
+    font-weight: 600;
+}
+
+#summary-container p {
+    margin-bottom: 1em;
+}
+
+#summary-container ul {
+    list-style: disc;
+    list-style-position: inside;
+}
