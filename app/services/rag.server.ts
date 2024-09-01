@@ -5,7 +5,7 @@ import { pineconeIndex } from "./pineconedb.server";
 import { nylas } from "./nylas.server";
 import { extractContent, parseAndCleanHtml } from "~/utils/html-preprocess";
 
-export async function extractKeywords(query: string) {
+async function extractKeywords(query: string) {
     const prompt = `
         Turn the question below that the user has asked into a string of keywords that could be searched on google to effectively find results about travel recommendations.
         Question: ${query}
@@ -16,7 +16,7 @@ export async function extractKeywords(query: string) {
     return keywords;
 }
 
-export async function googleSearch(keywords: string[]) {
+async function googleSearch(keywords: string[]) {
     const searchQuery = keywords.join(' ');
     const response = await axios.get('https://www.googleapis.com/customsearch/v1', {
         params: {
@@ -31,11 +31,11 @@ export async function googleSearch(keywords: string[]) {
         const snippet = item.snippet as string;
         const description = item.metatags["og:description"] as string || '';
         return description ? snippet + '. ' + description : snippet;
-    }).join(' ');
+    }).join(' ') as string;
     return compiledSearchResults;
 }
 
-export async function embedText(text: string) {
+async function embedText(text: string) {
     const result = await embeddingModel.embedContent(text);
     return result.embedding.values;
 }
@@ -52,7 +52,7 @@ export async function indexEmail(email: { subject: string, body: string, id: str
     ]);
 }
 
-export async function queryPinecone(query: string, nylasGrantId: string) {
+async function queryPinecone(query: string, nylasGrantId: string) {
     const queryVector = await embedText(query);
     const queryResponse = await pineconeIndex.query({
         vector: queryVector,
@@ -72,4 +72,27 @@ export async function queryPinecone(query: string, nylasGrantId: string) {
         const extractedEmailBody = extractContent(htmlPre || '');
         return `Subject: ${email.data.subject}\nBody: ${extractedEmailBody}`;
     }).join('\n\n');
+}
+
+export async function ragChatbot(query: string, nylasGrantId: string) {
+    const keywords = await extractKeywords(query);
+    const searchResults = await googleSearch(keywords);
+    const relevantEmails = await queryPinecone(query, nylasGrantId);
+    
+    const prompt = `
+        Context from relevant emails:
+        ${relevantEmails}
+
+        Additional context from web search:
+        ${searchResults}
+
+        User Query: ${query}
+
+        Please provide a comprehensive answer to the user's query based on the email context and additional information from the web search.
+        If you don't know the answer or don't understand the user query, just say that you don't know or understand and respond accordingly.
+        This is better instead of trying to make things up.
+    `;
+
+    const result = await chatModel.generateContent(prompt);
+    return result.response.text();
 }
