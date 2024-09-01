@@ -50,7 +50,7 @@ export default function Thread() {
     const navigate = useNavigate();
 
     // const [threadsContent, setThreadsContent] = useState([]);
-    const [showAIChat, setShowAIChat] = useState(false);
+    const [showAIChat, setShowAIChat] = useState(true);
 
     const [emailsViewed, setEmailsViewed] = useState<string[]>([]);
     const conversation = [
@@ -76,9 +76,9 @@ export default function Thread() {
                     <div id="summary-container">
                         <h2 className="font-semibold text-xl mb-2">Conversation Summary</h2>
                         {/* <div dangerouslySetInnerHTML={{ __html: emailThreadSummary }}></div> */}
-                        <Summarizer
+                        {/* <Summarizer
                             content={extractedEmailThread}
-                        />
+                        /> */}
                     </div>
                     <hr className="my-4" />
                     <div>

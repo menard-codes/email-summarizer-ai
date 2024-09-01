@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "~/services/auth.server";
-import { model } from "~/services/gemini.server";
+import { chatModel } from "~/services/gemini.server";
 
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -27,7 +27,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         - Here's the extracted emails in a thread: ${content}
         - Note: You don't need to give it a title heading (like: Email Thread Summary) as I already have that in the frontend, so including this heading title will make it redundant and unncessary.
     `
-    const res = await model.generateContent(prompt);
+    const res = await chatModel.generateContent(prompt);
     const emailThreadSummary = res.response.text();
 
     return { emailThreadSummary };
