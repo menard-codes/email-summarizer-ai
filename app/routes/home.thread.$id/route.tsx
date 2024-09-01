@@ -38,21 +38,30 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         }
     });
 
-    const htmlPre = messages.data[0].body ? parseAndCleanHtml(messages.data[0].body) : '';
-    const extractedEmailThread = htmlPre ? extractContent(htmlPre) : '';
+    const preprocessedMessages = messages.data.map(msg => {
+        const parsedHtml = parseAndCleanHtml(msg.body || '');
+        const body = extractContent(parsedHtml || '');
+        return {
+            id: msg.id,
+            body,
+            metadata: {
+                subject: msg.subject,
+                from: msg.from,
+                to: msg.to,
+                date: msg.date
+            }
+        }
+    });
 
-    return { messages, extractedEmailThread }
+    return { messages: preprocessedMessages };
 }
 
 export default function Thread() {
-    // const { messages, emailThreadSummary } = useLoaderData<typeof loader>();
-    const { messages, extractedEmailThread } = useLoaderData<typeof loader>();
+    const { messages } = useLoaderData<typeof loader>();
     const navigate = useNavigate();
 
-    // const [threadsContent, setThreadsContent] = useState([]);
     const [showAIChat, setShowAIChat] = useState(true);
 
-    const [emailsViewed, setEmailsViewed] = useState<string[]>([]);
     const conversation = [
         {
             id: 100,
@@ -75,7 +84,7 @@ export default function Thread() {
                 <div className="p-4">
                     <div id="summary-container">
                         <h2 className="font-semibold text-xl mb-2">Conversation Summary</h2>
-                        {/* <div dangerouslySetInnerHTML={{ __html: emailThreadSummary }}></div> */}
+                        {/* TODO: Just combine every single message into one */}
                         {/* <Summarizer
                             content={extractedEmailThread}
                         /> */}
@@ -85,17 +94,40 @@ export default function Thread() {
                         <h2 className="font-semibold text-xl mb-2">Email Thread</h2>
                         <div>
                             {
-                                messages.data.map(msg => (
+                                messages.map(msg => (
                                     <div key={msg.id} className="mb-4 border-b-2 p-2">
-                                        <h3 className="text-base font-semibold">{msg.subject}</h3>
+                                        <h3 className="text-base font-semibold">{msg.metadata.subject}</h3>
                                         <div className="italic text-sm text-gray-500">
-                                            <p>
-                                                From:{' '}
-                                                {msg.from?.map(sender => sender.email).join(', ')}
-                                            </p>
-                                            <p>{(new Date(msg.date * 1000)).toLocaleString()}</p>
+                                            <strong>From:</strong>
+                                            <div>
+                                                {msg.metadata.from?.map(sender => {
+                                                    return (
+                                                        <p key={sender.email}>
+                                                            <strong>${sender.name}</strong>
+                                                            {sender.email}
+                                                        </p>
+                                                    )
+                                                })}
+                                            </div>
+                                            <p>{(new Date(msg.metadata.date * 1000)).toLocaleString()}</p>
                                         </div>
-                                        <button
+                                        <div className="italic text-sm text-gray-500">
+                                            <strong>To:</strong>
+                                            <div>
+                                                {msg.metadata.to?.map(receiver => {
+                                                    return (
+                                                        <p key={receiver.email}>
+                                                            <strong>${receiver.name}</strong>
+                                                            {receiver.email}
+                                                        </p>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            {msg.body}
+                                        </div>
+                                        {/* <button
                                             onClick={() => setEmailsViewed(emailIds => {
                                                 return emailsViewed.includes(msg.id)
                                                     ? emailsViewed.filter(emailId => emailId !== msg.id)
@@ -103,14 +135,14 @@ export default function Thread() {
                                             })}
                                         >
                                             {emailsViewed.includes(msg.id) ? 'Hide' : 'Show'}
-                                        </button>
-                                        {
+                                        </button> */}
+                                        {/* {
                                             emailsViewed.includes(msg.id)
                                                 ? <HTMLIframe
                                                     htmlContent={msg.body || ''}
                                                 />
                                                 : ''
-                                        }
+                                        } */}
                                     </div>
                                 ))
                             }
@@ -162,50 +194,50 @@ export default function Thread() {
     )
 }
 
-function HTMLIframe({ htmlContent }: { htmlContent: string }) {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+// function HTMLIframe({ htmlContent }: { htmlContent: string }) {
+//     const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    useEffect(() => {
-        if (iframeRef.current) {
-            const iframe = iframeRef.current;
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+//     useEffect(() => {
+//         if (iframeRef.current) {
+//             const iframe = iframeRef.current;
+//             const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
 
-            if (iframeDoc) {
-                iframeDoc.open();
-                iframeDoc.write(htmlContent);
-                iframeDoc.close();
+//             if (iframeDoc) {
+//                 iframeDoc.open();
+//                 iframeDoc.write(htmlContent);
+//                 iframeDoc.close();
 
-                // Remove unwanted elements after the content is loaded
-                const removeUnwantedElements = () => {
-                    // Remove .gmail_quote elements
-                    const gmailQuotes = iframeDoc.querySelectorAll('.gmail_quote');
-                    const xGmailQuotes = iframeDoc.querySelectorAll('.x_gmail_quote');
-                    gmailQuotes.forEach(element => element.remove());
-                    xGmailQuotes.forEach(element => element.remove());
+//                 // Remove unwanted elements after the content is loaded
+//                 const removeUnwantedElements = () => {
+//                     // Remove .gmail_quote elements
+//                     const gmailQuotes = iframeDoc.querySelectorAll('.gmail_quote');
+//                     const xGmailQuotes = iframeDoc.querySelectorAll('.x_gmail_quote');
+//                     gmailQuotes.forEach(element => element.remove());
+//                     xGmailQuotes.forEach(element => element.remove());
 
-                    // Remove #appendonsend and its succeeding siblings
-                    const appendonsend = iframeDoc.querySelector('#appendonsend');
-                    if (appendonsend) {
-                        let currentElement: Element | null = appendonsend;
-                        while (currentElement) {
-                            const nextElement: Element | null = currentElement.nextElementSibling;
-                            currentElement.remove();
-                            currentElement = nextElement;
-                        }
-                    }
-                };
+//                     // Remove #appendonsend and its succeeding siblings
+//                     const appendonsend = iframeDoc.querySelector('#appendonsend');
+//                     if (appendonsend) {
+//                         let currentElement: Element | null = appendonsend;
+//                         while (currentElement) {
+//                             const nextElement: Element | null = currentElement.nextElementSibling;
+//                             currentElement.remove();
+//                             currentElement = nextElement;
+//                         }
+//                     }
+//                 };
 
-                // Use setTimeout to ensure the content is fully loaded
-                setTimeout(removeUnwantedElements, 0);
-            }
-        }
-    }, [htmlContent]);
+//                 // Use setTimeout to ensure the content is fully loaded
+//                 setTimeout(removeUnwantedElements, 0);
+//             }
+//         }
+//     }, [htmlContent]);
 
-    return (
-        <iframe
-            ref={iframeRef}
-            title="Email Content"
-            className="block w-full h-64 border-2"
-        />
-    );
-}
+//     return (
+//         <iframe
+//             ref={iframeRef}
+//             title="Email Content"
+//             className="block w-full h-64 border-2"
+//         />
+//     );
+// }

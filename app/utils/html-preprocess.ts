@@ -4,7 +4,7 @@ export function parseAndCleanHtml(htmlStr: string) {
     const $ = load(htmlStr);
 
     // Remove unwanted tags
-    $('script, style, iframe').remove();
+    $('script, style, iframe, .gmail_quote, .x_gmail_quote').remove();
 
     // Remove inline styles
     $('*').removeAttr('style');
@@ -14,8 +14,16 @@ export function parseAndCleanHtml(htmlStr: string) {
         return this.type === 'comment';
     }).remove();
 
+    // remove #appendonsend
+
     // Focus on main content (this is an example, adjust as needed)
     const mainContent = $('main').html() || $('article').html() || $('body').html();
+
+    // this is specifically for Gmail as it sends the messages as threads themselves
+    const targetElement = $('#appendonsend');
+    targetElement.nextAll().remove();
+    targetElement.remove();
+    // TODO: .gmail_quote .x_gmail_quote
 
     return mainContent;
 }

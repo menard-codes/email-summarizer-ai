@@ -14,6 +14,9 @@ importers:
       '@huggingface/inference':
         specifier: ^2.8.0
         version: 2.8.0
+      '@pinecone-database/pinecone':
+        specifier: ^3.0.2
+        version: 3.0.2
       '@prisma/client':
         specifier: 5.18.0
         version: 5.18.0(prisma@5.18.0)
@@ -49,7 +52,7 @@ importers:
         version: 9.0.2
       nylas:
         specifier: ^7.5.2
-        version: 7.5.2(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+        version: 7.5.2(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(encoding@0.1.13)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
       prisma:
         specifier: ^5.18.0
         version: 5.18.0
@@ -635,6 +638,10 @@ packages:
   '@npmcli/promise-spawn@6.0.2':
     resolution: {integrity: sha512-gGq0NJkIGSwdbUt4yhdF8ZrmkGKVz9vAdVzpOfnom+V8PLSmSOVhZwbNvZZS1EYcJN5hzzKBxmmVVAInM6HQLg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  '@pinecone-database/pinecone@3.0.2':
+    resolution: {integrity: sha512-OarESoYHlAEKh09pAzFs7QglCupd6Cv5QUIe9GHiFuVpyIFnBecklcRwWtLL1Qnd0cCFU7XvaWryFwrE4Pr4gA==}
+    engines: {node: '>=18.0.0'}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -1496,6 +1503,9 @@ packages:
 
   encoding-sniffer@0.2.0:
     resolution: {integrity: sha512-ju7Wq1kg04I3HtiYIOrUrdfdDvkyO9s5XM8QAj/bN61Yo/Vb4vgJxy5vi4Yxk01gWHbrofpPtpxM8bKger9jhg==}
+
+  encoding@0.1.13:
+    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
 
   end-of-stream@1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
@@ -4197,6 +4207,10 @@ snapshots:
     dependencies:
       which: 3.0.1
 
+  '@pinecone-database/pinecone@3.0.2':
+    dependencies:
+      encoding: 0.1.13
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -5243,6 +5257,10 @@ snapshots:
     dependencies:
       iconv-lite: 0.6.3
       whatwg-encoding: 3.1.1
+
+  encoding@0.1.13:
+    dependencies:
+      iconv-lite: 0.6.3
 
   end-of-stream@1.4.4:
     dependencies:
@@ -6759,9 +6777,11 @@ snapshots:
       lower-case: 2.0.2
       tslib: 2.7.0
 
-  node-fetch@2.7.0:
+  node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
       whatwg-url: 5.0.0
+    optionalDependencies:
+      encoding: 0.1.13
 
   node-releases@2.0.18: {}
 
@@ -6804,13 +6824,13 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nylas@7.5.2(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0):
+  nylas@7.5.2(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(encoding@0.1.13)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       change-case: 4.1.2
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       form-data: 4.0.0
       mime-types: 2.1.35
-      node-fetch: 2.7.0
+      node-fetch: 2.7.0(encoding@0.1.13)
       uuid: 8.3.2
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
